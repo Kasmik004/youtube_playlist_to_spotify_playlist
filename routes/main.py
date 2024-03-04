@@ -1,42 +1,15 @@
-
-from spotipy import Spotify
-from spotipy.oauth2 import SpotifyOAuth
-from spotipy.cache_handler import FlaskSessionCacheHandler
-import json
-import os
-import dotenv
-import webbrowser
+from flask import Blueprint, render_template, session, request, redirect, url_for, flash, sessions
 import requests
-from methods.youtube import get_songs
+from models.model import cache_handler, sp, auth_manager
+from methods.youtube import get_song_uris, get_songs, get_playlist_id_from_url
 
-from flask import Flask, redirect, session, url_for, request, render_template
-dotenv.load_dotenv()
+from methods import youtube
 
-client_id = os.getenv("SPOTIPY_CLIENT_ID")
-client_secret = os.getenv("SPOTIPY_CLIENT_SECRET")
-redirect_uri = 'http://127.0.0.1:5000/callback'
+main = Blueprint('main', __name__)
 
 
-app = Flask(__name__)
-app.config['SECRET_KEY'] = os.urandom(64)
-scope= 'user-library-read, playlist-modify-public, playlist-modify-private'
-
-
-cache_handler = FlaskSessionCacheHandler(session=session)
-
-auth_manager = SpotifyOAuth(
-    scope=scope,
-    client_id=client_id,
-    client_secret=client_secret,
-    redirect_uri=redirect_uri,
-    cache_handler=cache_handler,
-    show_dialog=True
-)
-
-sp = Spotify(auth_manager=auth_manager)
-
-
-@app.route('/youtube')
+'''
+@main.route('/youtube')
 def youtube():
     
 
@@ -56,40 +29,47 @@ def youtube():
         titles.append(result['snippet']['title'])
 
     return titles
+'''
 
 
 
-
-@app.route('/index')
+@main.route('/index')
 def index():
+    youtube.CHECK = 1
     session['index'] = 1
     return render_template("index.html")
 
-@app.route('/',methods=['GET','POST'])
+@main.route('/',methods=['GET','POST'])
 def home():
     if 'index' not in session:
-        return redirect(url_for('index'))
-
+        return redirect(url_for('main.index'))
+    
+    
     session['playlist_name'] = request.form['name']
     session['playlist_description'] = request.form['des']
+    session['play_id'] = request.form['id']
     cached_token = cache_handler.get_cached_token()
     if not auth_manager.validate_token(cached_token):
         auth_url = auth_manager.get_authorize_url()
         return redirect(auth_url)
     
-    return redirect(url_for('get_playlists'))
+    return redirect(url_for('main.get_playlists'))
 
 
 
 
-@app.route('/callback')
+@main.route('/callback')
 def callback():
+    if 'index' not in session:
+        return redirect(url_for('main.index'))
     auth_manager.get_access_token(request.args['code'])
-    return redirect(url_for('get_playlists'))
+    return redirect(url_for('main.get_playlists'))
 
 
-@app.route('/get_playlists')
+@main.route('/get_playlists')
 def get_playlists():
+    if 'index' not in session:
+        return redirect(url_for('main.index'))
     cached_token = cache_handler.get_cached_token()
     if not auth_manager.validate_token(cached_token):
         auth_url = auth_manager.get_authorize_url()
@@ -104,7 +84,9 @@ def get_playlists():
     
 
     sp.user_playlist_create(user=username,name=playist_name,public=True, description=playist_description)
-    songs = get_songs("PLUWT5vnZ7a39uMBO5bPkTtjxW8f_RY0Ti")
+    youtube_playlist_id = session['play_id']  #this is actually the url of the video
+    y_p_id = get_playlist_id_from_url(youtube_playlist_id)  #here we split the url into playlist id
+    songs = get_songs(y_p_id)
     song_uri = get_song_uris(songs=songs)
     
     current_playlist = sp.user_playlists(user=username)
@@ -112,7 +94,7 @@ def get_playlists():
     sp.user_playlist_add_tracks(user=username,playlist_id=c_p,tracks=song_uri)
     
     
-    return "Success"
+    return redirect(url_for('main.logout'))
     
     #playlist = sp.current_user_playlists()
     #return playlist
@@ -121,35 +103,21 @@ def get_playlists():
     #playlist_html = '<br>'.join([f'{name}: {url}' for name,url in playlist_list])
     #return playlist_html
 
-@app.route('/add_playlist')
+
+#may come in use to add more features
+@main.route('/add_playlist')
 def add_playlist():
+    if 'index' not in session:
+        return redirect(url_for('main.index'))
     username = sp.current_user()
     playist_name= input("Enter a name for your new playlist: ")
     playist_description = input("Enter a description for your new playlist: ")
     return None
 
-@app.route('/logout')
+@main.route('/logout')
 def logout():
+    if 'index' not in session:
+        return redirect(url_for('main.index'))
     session.clear()
-    return redirect(url_for('home'))
-    
-    
-def get_song_uris(songs):
-    uris=[]
-    for song in songs:
-        try:
-            
-            result = sp.search(q=song)
-            uris.append(result['tracks']['items'][0]['uri'])    
-        except:
-            print("NO data found for :",song)
-            
-    return uris
-
-
-
-if __name__ == '__main__':
-    app.run(debug=True)
-
-
-
+    flash("Successfully added")
+    return redirect(url_for('main.index'))

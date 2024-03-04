@@ -1,5 +1,18 @@
-<form action="{{ url_for('home') }}" method="post">
-    <input type="text" name="name">
-    <input type="text" name="des">
+{% with messages = get_flashed_messages() %}  
+{% if messages %}  
+      {% for message in messages %}  
+           <p>{{ message }}</p>  
+      {% endfor %}  
+{% endif %}  
+{% endwith %}
+
+
+<form action="{{ url_for('main.home') }}" method="post">
+    <label for="name">Playlist Name:</label>
+    <input type="text" name="name"><br>
+    <label for="des">Playlist Description:</label>
+    <input type="text" name="des"><br>
+    <label for="id">Youtube Playlist Url:</label>
+    <input type="text" name="id"><br>
     <button type="submit">submit</button>
 </form>
