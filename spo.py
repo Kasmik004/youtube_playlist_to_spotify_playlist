@@ -7,6 +7,7 @@ import os
 import dotenv
 import webbrowser
 import requests
+from youtube import get_songs
 
 from flask import Flask, redirect, session, url_for, request, render_template
 dotenv.load_dotenv()
@@ -98,19 +99,27 @@ def get_playlists():
     # playist_name="default"
     # playist_description="default"
     
-    # playist_name= session['playlist_name']
-    # playist_description = session['playlist_description']
+    playist_name= session['playlist_name']
+    playist_description = session['playlist_description']
     
 
-    #sp.user_playlist_create(user=username,name=playist_name,public=True, description=playist_description)
-    #return "Success"
+    sp.user_playlist_create(user=username,name=playist_name,public=True, description=playist_description)
+    songs = get_songs("PLUWT5vnZ7a39uMBO5bPkTtjxW8f_RY0Ti")
+    song_uri = get_song_uris(songs=songs)
     
-    playlist = sp.current_user_playlists()
+    current_playlist = sp.user_playlists(user=username)
+    c_p=current_playlist['items'][0]['id']
+    sp.user_playlist_add_tracks(user=username,playlist_id=c_p,tracks=song_uri)
+    
+    
+    return "Success"
+    
+    #playlist = sp.current_user_playlists()
     #return playlist
-    playlist_list = [(pl['name'],pl['external_urls']['spotify']) for pl in playlist['items']]
+    #playlist_list = [(pl['name'],pl['external_urls']['spotify']) for pl in playlist['items']]
     
-    playlist_html = '<br>'.join([f'{name}: {url}' for name,url in playlist_list])
-    return playlist_html
+    #playlist_html = '<br>'.join([f'{name}: {url}' for name,url in playlist_list])
+    #return playlist_html
 
 @app.route('/add_playlist')
 def add_playlist():
@@ -124,6 +133,18 @@ def logout():
     session.clear()
     return redirect(url_for('home'))
     
+    
+def get_song_uris(songs):
+    uris=[]
+    for song in songs:
+        try:
+            
+            result = sp.search(q=song)
+            uris.append(result['tracks']['items'][0]['uri'])    
+        except:
+            print("NO data found for :",song)
+            
+    return uris
 
 
 
