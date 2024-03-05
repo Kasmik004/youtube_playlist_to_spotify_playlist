@@ -1,10 +1,8 @@
 from spotipy import Spotify
 from spotipy.oauth2 import SpotifyOAuth
 from spotipy.cache_handler import FlaskSessionCacheHandler
-import json
 import os
 import dotenv
-import webbrowser
 import requests
 from flask import session
 

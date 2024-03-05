@@ -1,18 +1,94 @@
-{% with messages = get_flashed_messages() %}  
-{% if messages %}  
-      {% for message in messages %}  
-           <p>{{ message }}</p>  
-      {% endfor %}  
-{% endif %}  
-{% endwith %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playlist Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f2f2f2;
+        }
 
+        header, footer {
+            background-color: #007bff;
+            color: #fff;
+            padding: 10px;
+            text-align: center;
+        }
 
-<form action="{{ url_for('main.home') }}" method="post">
-    <label for="name">Playlist Name:</label>
-    <input type="text" name="name"><br>
-    <label for="des">Playlist Description:</label>
-    <input type="text" name="des"><br>
-    <label for="id">Youtube Playlist Url:</label>
-    <input type="text" name="id"><br>
-    <button type="submit">submit</button>
-</form>
+        main {
+            padding: 20px;
+        }
+
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button[type="submit"] {
+            background-color: #0056b3;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #004080;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Playlist Form</h1>
+    </header>
+
+    <main>
+        <section>
+            <form id="playlist-form" action="{{ url_for('main.home') }}" method="post">
+                <label for="name">Playlist Name:</label>
+                <input type="text" name="name" required><br>
+                <label for="des">Playlist Description:</label>
+                <input type="text" name="des" required><br>
+                <label for="id">YouTube Playlist Url:</label>
+                <input type="text" name="id" required><br>
+                <button type="submit">Submit</button>
+            </form>
+        </section>
+
+        <section id="flash-messages">
+            {% with messages = get_flashed_messages() %}  
+            {% if messages %}  
+                {% for message in messages %}  
+                    <p>{{ message }}</p>  
+                {% endfor %}  
+            {% endif %}  
+            {% endwith %}
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 YouTube to Spotify Playlist</p>
+    </footer>
+</body>
+</html>
