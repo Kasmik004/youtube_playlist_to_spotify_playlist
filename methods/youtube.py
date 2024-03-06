@@ -1,8 +1,13 @@
 import requests
 import youtube_title_parse
 from models.model import sp
+import dotenv
+import os
 
-api_key = 'AIzaSyDtOr1WM1s2X5oy_RmULTQGUdPL0L4PzK8'
+dotenv.load_dotenv()
+
+
+api_key = os.getenv('API_KEY')
 playlist_url = 'https://www.googleapis.com/youtube/v3/playlistItems'
 
 def get_songs(id):
